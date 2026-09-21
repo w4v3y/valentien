@@ -377,12 +377,14 @@
     { t: "Eres preciosa 💛",          x: 78, y: 62 },
     { t: "Eres mi todo 💛",           x: 80, y: 71 },
     { t: "Siempre juntos 🤍",         x: 50, y: 79 },
-    // Las de cariño peleonero 😄
+    // Sus apodos
+    { t: "Mi especial 💛",            x: 72, y: 55 },
+    { t: "My Down 🤍",                x: 30, y: 55 },
+    { t: "Mi Especial One 🌻",        x: 73, y: 78 },
     { t: "Mi enojona 😤",             x: 30, y: 44 },
     { t: "Mi gruñoncita 💢",          x: 18, y: 61 },
     { t: "Mi pequeña berrinchuda 😾", x: 50, y: 66 },
-    { t: "Mi demonio de Tasmania 😈", x: 50, y: 72 },
-    { t: "Mi terremoto 🌪️",           x: 71, y: 55 },
+    { t: "Mi demonio de Tasmania 😍", x: 50, y: 72 },
   ];
 
   function placePhrases() {
