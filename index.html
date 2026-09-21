@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flores Amarillas · Te Amo</title>
+<meta name="description" content="Animación romántica de flores amarillas: corazón de partículas doradas, girasoles y frases de amor sobre un cielo estrellado." />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Escena central del video: cielo estrellado + destellos dorados,
+       corazón de partículas, remolino de luz, girasoles y frases de amor. -->
+  <main class="scene" id="scene">
+    <canvas id="sky"></canvas>
+
+    <!-- Núcleo de luz / remolino central -->
+    <div class="core">
+      <div class="swirl"></div>
+      <div class="glow"></div>
+    </div>
+
+    <!-- Frase principal sobre el corazón -->
+    <div class="heart-text">Te amo <span class="em">💛</span> 🌻</div>
+
+    <!-- Ramos de girasoles repartidos por la escena -->
+    <div class="flowers" id="flowers"></div>
+
+    <!-- Frases de amor flotantes -->
+    <div class="phrases" id="phrases"></div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+/* ============================================================
+   Flores Amarillas · Te Amo
+   Réplica de la escena central del video: cielo oscuro con
+   destellos dorados, corazón y remolino de partículas, girasoles
+   y frases de amor brillando en tonos ámbar.
+   ============================================================ */
+
+:root {
+  --gold: #ffcf3f;
+  --gold-soft: #ffe38a;
+  --amber: #ff9d1c;
+  --bg-0: #050403;
+  --bg-1: #1a1602;
+  --text-glow: 0 0 6px rgba(255, 210, 90, .9),
+               0 0 14px rgba(255, 165, 30, .55);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ---- Escena ---- */
+.scene {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  /* Resplandor verde-dorado hacia el centro, como en el video */
+  background:
+    radial-gradient(120% 80% at 50% 42%,
+        rgba(120, 110, 20, .55) 0%,
+        rgba(60, 55, 10, .35) 24%,
+        rgba(20, 18, 4, .9) 55%,
+        var(--bg-0) 78%),
+    var(--bg-0);
+}
+
+/* Cielo de partículas (canvas) por encima del fondo */
+#sky {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ---- Núcleo central: remolino + brillo ---- */
+.core {
+  position: absolute;
+  left: 50%;
+  top: 47%;
+  width: 190px;
+  height: 190px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.glow {
+  position: absolute;
+  inset: -18%;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+      rgba(255, 244, 200, .95) 0%,
+      rgba(255, 205, 80, .55) 18%,
+      rgba(255, 160, 30, .25) 38%,
+      transparent 68%);
+  filter: blur(4px);
+  animation: pulse 3.2s ease-in-out infinite;
+}
+
+.swirl {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    conic-gradient(from 0deg,
+        transparent 0deg,
+        rgba(255, 223, 120, .0) 40deg,
+        rgba(255, 223, 120, .85) 70deg,
+        transparent 110deg,
+        transparent 180deg,
+        rgba(255, 200, 70, .0) 220deg,
+        rgba(255, 235, 160, .8) 250deg,
+        transparent 300deg);
+  -webkit-mask: radial-gradient(circle, transparent 12%, #000 22%, #000 60%, transparent 78%);
+          mask: radial-gradient(circle, transparent 12%, #000 22%, #000 60%, transparent 78%);
+  filter: blur(1px) drop-shadow(0 0 8px rgba(255, 200, 80, .7));
+  animation: spin 6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { opacity: .8; transform: scale(1); }
+  50%      { opacity: 1;  transform: scale(1.12); }
+}
+
+/* ---- Texto sobre el corazón ---- */
+.heart-text {
+  position: absolute;
+  left: 50%;
+  top: 13%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: clamp(1rem, 3.4vw, 1.7rem);
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-shadow: var(--text-glow);
+  white-space: nowrap;
+  animation: floaty 4s ease-in-out infinite;
+}
+.heart-text .em { filter: drop-shadow(0 0 6px rgba(255,190,40,.8)); }
+
+/* ---- Girasoles / ramos ---- */
+.flower {
+  position: absolute;
+  font-size: var(--size, 2.4rem);
+  filter: drop-shadow(0 0 10px rgba(255, 190, 40, .55));
+  animation: sway var(--dur, 5s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+
+@keyframes sway {
+  0%, 100% { transform: translate(-50%, -50%) rotate(-5deg) scale(1); }
+  50%      { transform: translate(-50%, -54%) rotate(5deg) scale(1.05); }
+}
+
+/* ---- Frases de amor ---- */
+.phrase {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: clamp(.65rem, 2.1vw, .95rem);
+  font-weight: 500;
+  white-space: nowrap;
+  text-shadow: var(--text-glow);
+  opacity: 0;
+  animation: appear var(--dur, 6s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes appear {
+  0%, 100% { opacity: 0; transform: translate(-50%, -46%) scale(.9); }
+  18%, 82% { opacity: .95; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-8px); }
+}
+
+/* Respeta a quien prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .swirl, .glow, .flower, .phrase, .heart-text { animation-duration: .001s; animation-iteration-count: 1; }
+}
