@@ -222,6 +222,15 @@ html, body {
   margin-bottom: 10px;
   color: #4a3d1e;
 }
+/* Apunte juguetón entre paréntesis */
+.card .aside {
+  font-size: clamp(.7rem, 3vw, .81rem);
+  font-style: italic;
+  color: #8a7238;
+  margin-top: -5px;
+  margin-bottom: 11px;
+}
+
 .card .sign {
   font-family: "Dancing Script", cursive;
   font-size: clamp(1.6rem, 7vw, 2.1rem);
