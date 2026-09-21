@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#040302" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Flores Amarillas" />
+<title>Flores Amarillas para Ti 🌻</title>
+<meta name="description" content="Animación romántica de flores amarillas: galaxia dorada, corazón de glitter, girasoles y una carta de amor." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;600&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   Flores Amarillas · Te Amo
+   Réplica de la animación del video, por fases:
+   estrellas → galaxia → corazón → floración → carta.
+   ============================================================ */
+
+:root {
+  --bg-0: #040302;
+  --cream: #fdf6e3;
+  --amber: #f2b705;
+  --amber-dp: #c98a04;
+  --ink: #3a2f16;
+  --glow: 0 0 6px rgba(255, 214, 92, .95), 0 0 16px rgba(255, 168, 30, .6);
+
+  /* Tiempos de la coreografía (deben coincidir con script.js) */
+  --t-heart: 4.2s;
+  --t-bloom: 5.0s;
+  --t-phrase: 5.8s;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg-0);
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  font-family: Quicksand, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ---------- Escena ---------- */
+.scene {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg-0);
+}
+
+#sky { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* Nubes difusas verde-doradas que se encienden con la galaxia */
+.nebula { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.neb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(42px);
+  opacity: 0;
+  animation: nebIn 2.6s ease-out 3s both, nebDrift var(--nd, 14s) ease-in-out 3s infinite;
+  background: radial-gradient(circle,
+      rgba(186, 178, 40, .55) 0%,
+      rgba(120, 116, 22, .28) 45%,
+      transparent 72%);
+}
+.neb.n1 { width: 55%; height: 26%; left: -8%;  top: 16%; }
+.neb.n2 { width: 50%; height: 24%; right: -6%; top: 10%; --nd: 17s; }
+.neb.n3 { width: 46%; height: 22%; left: 2%;   bottom: 16%; --nd: 19s; }
+.neb.n4 { width: 52%; height: 24%; right: -4%; bottom: 10%; --nd: 15s; }
+.neb.n5 { width: 70%; height: 30%; left: 15%;  top: 38%; --nd: 21s; opacity: 0; }
+
+@keyframes nebIn { from { opacity: 0; } to { opacity: .85; } }
+@keyframes nebDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(2%, -3%, 0) scale(1.12); }
+}
+
+/* ---------- Texto dentro del corazón ---------- */
+.heart-text {
+  position: absolute;
+  left: 50%;
+  top: calc(24% + env(safe-area-inset-top, 0px));
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: clamp(.95rem, 4.4vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-shadow: var(--glow);
+  white-space: nowrap;
+  opacity: 0;
+  animation: softIn 1.2s ease-out calc(var(--t-heart) + 1.5s) both,
+             floaty 4s ease-in-out calc(var(--t-heart) + 2.7s) infinite;
+}
+
+/* ---------- Ramos de girasoles ---------- */
+.flower {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  animation: bloom 1s cubic-bezier(.2, 1.4, .4, 1) var(--delay, 0s) both;
+  pointer-events: none;
+}
+.flower i {
+  display: block;
+  font-style: normal;
+  font-size: var(--size, 2.4rem);
+  line-height: 1;
+  filter: drop-shadow(0 0 10px rgba(255, 196, 46, .65));
+  animation: sway var(--dur, 5s) ease-in-out var(--delay, 0s) infinite;
+}
+
+@keyframes bloom {
+  0%   { opacity: 0; transform: translate(-50%, -20%) scale(.1) rotate(-12deg); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+}
+@keyframes sway {
+  0%, 100% { transform: rotate(-5deg) scale(1); }
+  50%      { transform: rotate(5deg) scale(1.06); }
+}
+
+/* Ramo grande del centro, sobre la galaxia */
+.center-bouquet {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(2.6rem, 12vw, 4.2rem);
+  line-height: 1;
+  filter: drop-shadow(0 0 18px rgba(255, 200, 60, .85));
+  opacity: 0;
+  animation: bloom 1.3s cubic-bezier(.2, 1.3, .4, 1) calc(var(--t-bloom) + .2s) both,
+             floaty2 5s ease-in-out calc(var(--t-bloom) + 1.5s) infinite;
+  pointer-events: none;
+}
+
+/* ---------- Frases de amor ---------- */
+.phrase {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: clamp(.68rem, 3vw, .95rem);
+  font-weight: 600;
+  white-space: nowrap;
+  text-shadow: var(--glow);
+  opacity: 0;
+  animation: softIn .9s ease-out var(--delay, 0s) both,
+             twinkle var(--dur, 7s) ease-in-out var(--delay, 0s) infinite;
+  pointer-events: none;
+}
+
+@keyframes softIn {
+  from { opacity: 0; transform: translate(-50%, -40%) scale(.85); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: .95; }
+  50%      { opacity: .45; }
+}
+@keyframes floaty {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-7px); }
+}
+@keyframes floaty2 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -54%) scale(1.04); }
+}
+
+/* ---------- Carta de amor ---------- */
+.card-layer {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) 16px
+           max(16px, env(safe-area-inset-bottom, 0px));
+  background: rgba(8, 6, 2, .55);
+  backdrop-filter: blur(2px);
+  z-index: 40;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .5s ease, visibility .5s;
+}
+.card-layer.show { opacity: 1; visibility: visible; }
+
+.card-wrap {
+  width: min(88vw, 340px);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  transform: scale(.82) translateY(14px);
+  transition: transform .55s cubic-bezier(.2, 1.3, .4, 1);
+}
+.card-layer.show .card-wrap { transform: scale(1) translateY(0); }
+
+.card {
+  width: 100%;
+  border-radius: 14px;
+  padding: 10px;
+  overflow: hidden;
+  /* Fondo acuarela ámbar */
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 233, 150, .95), transparent 55%),
+    radial-gradient(circle at 85% 80%, rgba(233, 176, 22, .9), transparent 58%),
+    linear-gradient(150deg, #f6cf5c 0%, #edb420 48%, #f3c94f 100%);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .6), 0 0 34px rgba(255, 190, 40, .35);
+}
+
+.card-inner {
+  border-radius: 10px;
+  background: linear-gradient(170deg, #fffdf4 0%, #fdf4dd 100%);
+  padding: 20px 16px 12px;
+  text-align: center;
+  color: var(--ink);
+  position: relative;
+  overflow: hidden;
+}
+
+.card h2 {
+  font-family: "Dancing Script", cursive;
+  font-size: clamp(1.9rem, 8vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.card p {
+  font-size: clamp(.78rem, 3.4vw, .9rem);
+  line-height: 1.5;
+  margin-bottom: 10px;
+  color: #4a3d1e;
+}
+/* Apunte juguetón entre paréntesis */
+.card .aside {
+  font-size: clamp(.7rem, 3vw, .81rem);
+  font-style: italic;
+  color: #8a7238;
+  margin-top: -5px;
+  margin-bottom: 11px;
+}
+
+.card .sign {
+  font-family: "Dancing Script", cursive;
+  font-size: clamp(1.6rem, 7vw, 2.1rem);
+  font-weight: 600;
+  margin: 6px 0 2px;
+  color: #2f2712;
+}
+
+/* Corazoncitos dibujados */
+.card .hearts {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  color: var(--amber-dp);
+  margin-bottom: -4px;
+}
+.card .hearts span:nth-child(2) { font-size: 1.5rem; }
+
+.card .bouquet {
+  font-size: clamp(3.4rem, 17vw, 4.6rem);
+  line-height: 1.05;
+  margin-top: 2px;
+  filter: drop-shadow(0 6px 10px rgba(120, 90, 10, .35));
+}
+
+.card .tag {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 5px 20px 4px;
+  border-radius: 0 0 12px 12px;
+  background: #fbfaf5;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .12);
+  font-size: .92rem;
+  letter-spacing: .5px;
+  color: #4a3d1e;
+}
+
+.btn-close {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: #4a3a05;
+  padding: 11px 30px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffd95e 0%, #f0b70d 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .45), 0 0 20px rgba(255, 190, 40, .5);
+  flex: none;
+}
+.btn-close:active { transform: translateY(1px); }
+.btn-close:focus-visible { outline: 3px solid #fff3c4; outline-offset: 3px; }
+
+/* Botón para volver a abrir la carta */
+.btn-letter {
+  position: absolute;
+  left: 50%;
+  bottom: calc(4% + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 30;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .85rem;
+  font-weight: 700;
+  color: #4a3a05;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffd95e 0%, #f0b70d 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .5), 0 0 18px rgba(255, 190, 40, .45);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .5s ease, visibility .5s;
+}
+.btn-letter.show { opacity: 1; visibility: visible; }
+.btn-letter:focus-visible { outline: 3px solid #fff3c4; outline-offset: 3px; }
+
+/* ---------- Pista de toque ---------- */
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(13% + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  color: rgba(255, 240, 200, .7);
+  font-size: .8rem;
+  letter-spacing: .6px;
+  text-shadow: var(--glow);
+  pointer-events: none;
+  opacity: 0;
+  animation: softIn 1s ease-out 7.5s both, floaty 3s ease-in-out 8.5s infinite;
+  transition: opacity .6s ease;
+}
+.hint.gone { opacity: 0 !important; animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .neb, .flower, .flower i, .phrase, .heart-text, .center-bouquet, .hint {
+    animation-duration: .01s !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+</style>
+</head>
+<body>
+  <main class="scene" id="scene">
+    <canvas id="sky"></canvas>
+
+    <!-- Nubes difusas verde-doradas -->
+    <div class="nebula" aria-hidden="true">
+      <div class="neb n1"></div><div class="neb n2"></div>
+      <div class="neb n3"></div><div class="neb n4"></div>
+      <div class="neb n5"></div>
+    </div>
+
+    <!-- Frase dentro del corazón -->
+    <div class="heart-text">Te amo 🤍 🌻</div>
+
+    <!-- Ramo grande sobre la galaxia -->
+    <div class="center-bouquet" aria-hidden="true">🌻</div>
+
+    <!-- Ramos y frases (generados por script.js) -->
+    <div class="flowers" id="flowers" aria-hidden="true"></div>
+    <div class="phrases" id="phrases" aria-hidden="true"></div>
+
+    <div class="hint" id="hint">Toca la pantalla ✨</div>
+
+    <button class="btn-letter" id="btnLetter" type="button">💌 Ver la carta</button>
+  </main>
+
+  <!-- Carta de amor -->
+  <div class="card-layer" id="cardLayer" role="dialog" aria-modal="true" aria-label="Carta de amor">
+    <div class="card-wrap">
+      <div class="card">
+        <div class="card-inner">
+          <h2>Mi amor:</h2>
+          <p>Estas flores amarillas son como tú: brillantes, radiantes y llenas de alegría y furia.</p>
+          <p class="aside">(lo último solo tú, por eso eres mi down)</p>
+          <p>Gracias por iluminar cada uno de mis días. Eres simplemente hermosa.</p>
+          <div class="sign">Te Amo Mucho</div>
+          <div class="hearts" aria-hidden="true"><span>♥</span><span>♥</span><span>♥</span></div>
+          <div class="bouquet" aria-hidden="true">🌻</div>
+          <div class="tag">Para Ti</div>
+        </div>
+      </div>
+      <button class="btn-close" id="btnClose" type="button">Cerrar 🌻</button>
+    </div>
+  </div>
+
+  <script>
+/* ============================================================
+   Flores Amarillas · Te Amo — motor de la animación
+   Coreografía del video, por fases:
+     0.0s  cielo estrellado + florecitas cayendo con estela
+     2.8s  estalla la galaxia dorada (disco + espiral)
+     4.2s  nace el corazón y crece
+     5.0s  florecen los ramos de girasoles
+     5.8s  aparecen las frases de amor
+     6.0s  fuente de partículas del centro hacia el corazón
+    12.0s  se abre la carta de amor
+   ============================================================ */
+(() => {
+  "use strict";
+
+  /* ---------- Línea de tiempo (segundos) ---------- */
+  const T = {
+    galaxy: 2.8,
+    heart:  4.2,
+    bloom:  5.0,
+    phrase: 5.8,
+    jet:    6.0,
+    card:  12.0,
+  };
+
+  const canvas = document.getElementById("sky");
+  const ctx = canvas.getContext("2d", { alpha: true });
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let W = 0, H = 0, DPR = 1, small = false;
+  let cx = 0, cy = 0;            // centro de la galaxia
+  let hx = 0, hy = 0, hs = 1;    // centro y escala del corazón
+
+  const clamp01 = (v) => v < 0 ? 0 : v > 1 ? 1 : v;
+  const easeOut  = (p) => 1 - Math.pow(1 - p, 3);
+  const easeBack = (p) => { const c = 1.70158 + 1; return 1 + c * Math.pow(p - 1, 3) + 1.70158 * Math.pow(p - 1, 2); };
+
+  /* ---------- Dimensionado ---------- */
+  function resize() {
+    W = canvas.clientWidth;
+    H = canvas.clientHeight;
+    small = Math.min(W, H) < 500;
+    DPR = Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2);
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    cx = W * 0.5;  cy = H * 0.50;      // núcleo de la galaxia
+    hx = W * 0.5;  hy = H * 0.255;     // centro del corazón
+    hs = Math.min(W * 0.016, H * 0.0085);  // escala del corazón
+
+    buildStars();
+    buildGalaxy();
+    buildHeart();
+  }
+
+  /* ---------- Estrellas ---------- */
+  let stars = [];
+  function buildStars() {
+    const n = Math.round((W * H) / (small ? 7000 : 5200));
+    stars = new Array(n);
+    for (let i = 0; i < n; i++) {
+      stars[i] = {
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.2 + 0.25,
+        ph: Math.random() * Math.PI * 2,
+        sp: Math.random() * 1.6 + 0.4,
+      };
+    }
+  }
+
+  /* ---------- Galaxia: disco + brazos espirales ---------- */
+  let gal = [];
+  let R = 0;
+  function buildGalaxy() {
+    R = W * 0.74;
+    const n = small ? 2600 : 4200;
+    gal = new Array(n);
+    for (let i = 0; i < n; i++) {
+      // Densidad mayor hacia el centro
+      const u = Math.pow(Math.random(), 0.62);
+      const r = 0.06 * R + u * R;
+      // Dos brazos logarítmicos con dispersión
+      const arm = (i % 2) * Math.PI;
+      const spread = (Math.random() - 0.5) * (1.1 + 2.2 * u);
+      const a0 = 3.1 * Math.log(r / (R * 0.06)) + arm + spread;
+      gal[i] = {
+        r,
+        a: a0,
+        // rotación diferencial: el centro gira más rápido
+        w: 0.42 / Math.pow(r / R + 0.14, 0.78),
+        s: Math.random() * 1.0 + 0.6,
+        b: 0.35 + 0.65 * (1 - u),          // brillo
+        z: (Math.random() - 0.5) * 0.10,   // grosor del disco
+        t: Math.random() * Math.PI * 2,    // fase de centelleo
+        d: 0.35 + Math.random() * 0.65,    // retardo de aparición
+      };
+    }
+  }
+
+  /* ---------- Corazón de glitter ---------- */
+  let heart = [];
+  function buildHeart() {
+    const n = small ? 900 : 1300;
+    heart = new Array(n);
+    for (let i = 0; i < n; i++) {
+      const t = Math.random() * Math.PI * 2;
+      const px = 16 * Math.pow(Math.sin(t), 3);
+      const py = 13 * Math.cos(t) - 5 * Math.cos(2 * t)
+               - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+      // Banda gruesa: desplazamiento aleatorio alrededor de la curva
+      const jx = (Math.random() - 0.5) * 1.7;
+      const jy = (Math.random() - 0.5) * 1.7;
+      heart[i] = {
+        x: px + jx,
+        y: -py + jy,
+        s: Math.random() * 1.1 + 0.7,
+        t: Math.random() * Math.PI * 2,
+        b: 0.45 + Math.random() * 0.55,
+      };
+    }
+  }
+
+  /* ---------- Partículas sueltas ---------- */
+  const petals = [];   // florecitas que caen con estela
+  const jets = [];     // fuente del centro hacia el corazón
+  const bursts = [];   // estallidos al tocar
+  const GLYPHS = ["🌻", "🌼", "💛"];
+
+  function spawnPetal() {
+    if (petals.length > (small ? 26 : 42)) return;
+    petals.push({
+      x: Math.random() * W,
+      y: -30,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: Math.random() * 1.5 + 0.7,
+      sz: Math.random() * 12 + 9,
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 0.04,
+      g: GLYPHS[(Math.random() * GLYPHS.length) | 0],
+      trail: Math.random() < 0.3,
+    });
+  }
+
+  function spawnJet() {
+    jets.push({
+      x: cx + (Math.random() - 0.5) * 14,
+      y: cy - 4,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: -(Math.random() * 1.5 + 1.1),
+      life: 0,
+      max: Math.random() * 60 + 55,
+      s: Math.random() * 1.6 + 0.6,
+    });
+  }
+
+  function burst(x, y) {
+    const n = small ? 20 : 30;
+    for (let i = 0; i < n; i++) {
+      const a = (Math.PI * 2 * i) / n + Math.random() * 0.35;
+      const sp = Math.random() * 2.8 + 0.9;
+      bursts.push({
+        x, y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 0.5,
+        life: 0,
+        max: Math.random() * 55 + 45,
+        s: Math.random() * 1.9 + 0.7,
+      });
+    }
+  }
+
+  /* ---------- Dibujo ---------- */
+  const t0 = performance.now();
+  let last = t0;
+
+  function draw(now) {
+    const time = (now - t0) / 1000;              // segundos desde el inicio
+    const dt = Math.min(2.2, (now - last) / 16.7);
+    last = now;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = "lighter";
+
+    /* --- Estrellas --- */
+    const starIn = clamp01(time / 1.2);
+    for (const s of stars) {
+      s.ph += 0.045 * dt;
+      s.y += s.sp * 0.04 * dt;
+      if (s.y > H) { s.y = -2; s.x = Math.random() * W; }
+      const a = (0.30 + 0.35 * Math.sin(s.ph)) * starIn;
+      ctx.fillStyle = "rgba(255,247,222," + a.toFixed(3) + ")";
+      ctx.fillRect(s.x, s.y, s.r, s.r);
+    }
+
+    /* --- Galaxia --- */
+    const gp = clamp01((time - T.galaxy) / 1.6);
+    if (gp > 0) {
+      const grow = easeOut(gp);
+      const squash = 0.30;
+
+      // Resplandor del disco
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(1, squash);
+      const dg = ctx.createRadialGradient(0, 0, 0, 0, 0, R * grow);
+      dg.addColorStop(0.00, "rgba(255,252,226," + (0.78 * grow) + ")");
+      dg.addColorStop(0.16, "rgba(255,226,130," + (0.46 * grow) + ")");
+      dg.addColorStop(0.45, "rgba(214,186,46,"  + (0.24 * grow) + ")");
+      dg.addColorStop(1.00, "rgba(120,110,20,0)");
+      ctx.fillStyle = dg;
+      ctx.beginPath();
+      ctx.arc(0, 0, R * grow, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Polvo de estrellas en brazos espirales
+      for (const p of gal) {
+        const vis = clamp01((grow - p.d * 0.5) / 0.5);
+        if (vis <= 0) continue;
+        p.a += p.w * 0.012 * dt;
+        p.t += 0.09 * dt;
+        const rr = p.r * grow;
+        const x = cx + Math.cos(p.a) * rr;
+        const y = cy + Math.sin(p.a) * rr * squash + p.z * rr * squash;
+        const tw = 0.55 + 0.45 * Math.sin(p.t);
+        const a = Math.min(1, p.b * tw * vis * 1.25);
+        ctx.fillStyle = "rgba(255," + (228 + ((p.b * 26) | 0)) + ",150," + a.toFixed(3) + ")";
+        ctx.fillRect(x, y, p.s, p.s);
+      }
+
+      // Núcleo brillante
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 58 * grow);
+      core.addColorStop(0, "rgba(255,255,250," + (1.0 * grow) + ")");
+      core.addColorStop(0.3, "rgba(255,240,175," + (0.62 * grow) + ")");
+      core.addColorStop(1, "rgba(255,190,60,0)");
+      ctx.fillStyle = core;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 58 * grow, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    /* --- Corazón --- */
+    const hp = clamp01((time - T.heart) / 1.7);
+    if (hp > 0) {
+      const sc = (reduced ? 1 : easeBack(hp)) * hs;
+      const beat = 1 + Math.sin(time * 2.1) * 0.028;
+      for (const p of heart) {
+        p.t += 0.10 * dt;
+        const tw = 0.5 + 0.5 * Math.sin(p.t);
+        const x = hx + p.x * sc * beat;
+        const y = hy + p.y * sc * beat;
+        const a = Math.min(1, p.b * tw * hp * 1.3);
+        const col = "255," + (246 - ((tw * 34) | 0)) + ",128,";
+        ctx.fillStyle = "rgba(" + col + (a * 0.22).toFixed(3) + ")";
+        ctx.fillRect(x - p.s * 0.9, y - p.s * 0.9, p.s * 2.8, p.s * 2.8);
+        ctx.fillStyle = "rgba(" + col + a.toFixed(3) + ")";
+        ctx.fillRect(x, y, p.s, p.s);
+      }
+      // Halo suave del corazón
+      const hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, 20 * hs * hp);
+      hg.addColorStop(0, "rgba(255,238,170," + (0.10 * hp) + ")");
+      hg.addColorStop(1, "rgba(255,200,60,0)");
+      ctx.fillStyle = hg;
+      ctx.beginPath();
+      ctx.arc(hx, hy, 20 * hs * hp, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    /* --- Fuente del centro hacia el corazón --- */
+    if (time > T.jet && !reduced) {
+      if (Math.random() < 0.7) spawnJet();
+    }
+    for (let i = jets.length - 1; i >= 0; i--) {
+      const p = jets[i];
+      p.life += dt; p.x += p.vx * dt; p.y += p.vy * dt;
+      p.vy *= 0.994;
+      const f = 1 - p.life / p.max;
+      if (f <= 0) { jets.splice(i, 1); continue; }
+      ctx.fillStyle = "rgba(255,244,190," + (f * 0.75).toFixed(3) + ")";
+      ctx.fillRect(p.x, p.y, p.s, p.s);
+    }
+
+    /* --- Florecitas cayendo con estela --- */
+    if (Math.random() < (time < T.galaxy ? 0.34 : 0.12)) spawnPetal();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (let i = petals.length - 1; i >= 0; i--) {
+      const p = petals[i];
+      p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+      if (p.y > H + 40) { petals.splice(i, 1); continue; }
+      if (p.trail) {
+        const g = ctx.createLinearGradient(p.x, p.y - 26, p.x, p.y);
+        g.addColorStop(0, "rgba(255,226,140,0)");
+        g.addColorStop(1, "rgba(255,226,140,.30)");
+        ctx.strokeStyle = g;
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(p.x - p.vx * 16, p.y - 26);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+      }
+      // Resplandor dorado detrás de la flor (modo aditivo)
+      const halo = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.sz * 1.25);
+      halo.addColorStop(0, "rgba(255,226,120,.55)");
+      halo.addColorStop(1, "rgba(255,190,50,0)");
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.sz * 1.25, 0, Math.PI * 2);
+      ctx.fill();
+      // La flor en sí, en modo normal (el emoji no admite mezcla aditiva)
+      ctx.globalCompositeOperation = "source-over";
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.font = p.sz + "px serif";
+      ctx.fillText(p.g, 0, 0);
+      ctx.restore();
+      ctx.globalCompositeOperation = "lighter";
+    }
+
+    /* --- Estallidos al tocar --- */
+    for (let i = bursts.length - 1; i >= 0; i--) {
+      const p = bursts[i];
+      p.life += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.012 * dt;
+      const f = 1 - p.life / p.max;
+      if (f <= 0) { bursts.splice(i, 1); continue; }
+      ctx.fillStyle = "rgba(255,238,160," + f.toFixed(3) + ")";
+      ctx.fillRect(p.x, p.y, p.s, p.s);
+    }
+
+    ctx.globalCompositeOperation = "source-over";
+    requestAnimationFrame(draw);
+  }
+
+  /* ---------- Ramos de girasoles (DOM) ---------- */
+  const FLOWERS = [
+    { x:  9, y: 36, s: 1.7 }, { x: 17, y: 48, s: 2.4 }, { x: 10, y: 61, s: 1.9 },
+    { x: 25, y: 71, s: 1.6 }, { x: 34, y: 41, s: 1.2 }, { x: 45, y: 80, s: 1.8 },
+    { x: 62, y: 74, s: 1.5 }, { x: 69, y: 43, s: 1.2 }, { x: 85, y: 35, s: 2.3 },
+    { x: 92, y: 54, s: 1.8 }, { x: 88, y: 69, s: 1.6 }, { x: 74, y: 27, s: 1.3 },
+    { x: 23, y: 26, s: 1.2 }, { x: 56, y: 32, s: 1.1 },
+  ];
+  const BOUQUET = ["🌻", "🌼", "🌻", "🌻", "🌼"];
+
+  function placeFlowers() {
+    const box = document.getElementById("flowers");
+    const frag = document.createDocumentFragment();
+    FLOWERS.forEach((f, i) => {
+      const el = document.createElement("div");
+      el.className = "flower";
+      el.style.left = f.x + "%";
+      el.style.top = f.y + "%";
+      el.style.setProperty("--delay", (5.0 + i * 0.11).toFixed(2) + "s");
+      el.style.setProperty("--dur", (4 + Math.random() * 3).toFixed(2) + "s");
+      const g = document.createElement("i");
+      g.textContent = BOUQUET[i % BOUQUET.length];
+      g.style.setProperty("--size", f.s + "rem");
+      g.style.setProperty("--dur", (4 + Math.random() * 3).toFixed(2) + "s");
+      g.style.setProperty("--delay", (5.6 + i * 0.11).toFixed(2) + "s");
+      el.appendChild(g);
+      frag.appendChild(el);
+    });
+    box.appendChild(frag);
+  }
+
+  /* ---------- Frases de amor (DOM) ---------- */
+  const PHRASES = [
+    // Cariñosas
+    { t: "Te adoro 💛",               x: 15, y: 39 },
+    { t: "Eres mi sol 🌻",            x: 13, y: 51 },
+    { t: "Eres única 💛",             x: 16, y: 70 },
+    { t: "Amor de mi vida 🤍",        x: 47, y: 36 },
+    { t: "Te Amo 🌼",                 x: 30, y: 77 },
+    { t: "Me encantas 🌻",            x: 72, y: 41 },
+    { t: "Mi Amor 🤍",                x: 84, y: 49 },
+    { t: "Eres preciosa 💛",          x: 78, y: 62 },
+    { t: "Eres mi todo 💛",           x: 80, y: 71 },
+    { t: "Siempre juntos 🤍",         x: 50, y: 79 },
+    // Sus apodos
+    { t: "Mi especial 💛",            x: 72, y: 55 },
+    { t: "My Down 🤍",                x: 30, y: 55 },
+    { t: "Mi Especial One 🌻",        x: 73, y: 78 },
+    { t: "Mi enojona 😤",             x: 30, y: 44 },
+    { t: "Mi gruñoncita 💢",          x: 18, y: 61 },
+    { t: "Mi pequeña berrinchuda 😾", x: 50, y: 66 },
+    { t: "Mi demonio de Tasmania 😍", x: 50, y: 72 },
+  ];
+
+  function placePhrases() {
+    const box = document.getElementById("phrases");
+    const frag = document.createDocumentFragment();
+    PHRASES.forEach((p, i) => {
+      const el = document.createElement("div");
+      el.className = "phrase";
+      el.textContent = p.t;
+      el.style.left = p.x + "%";
+      el.style.top = p.y + "%";
+      el.style.setProperty("--delay", (5.8 + i * 0.16).toFixed(2) + "s");
+      el.style.setProperty("--dur", (6 + Math.random() * 4).toFixed(2) + "s");
+      frag.appendChild(el);
+    });
+    box.appendChild(frag);
+  }
+
+  /* ---------- Carta de amor ---------- */
+  function initCard() {
+    const layer = document.getElementById("cardLayer");
+    const btnClose = document.getElementById("btnClose");
+    const btnLetter = document.getElementById("btnLetter");
+
+    const open = () => { layer.classList.add("show"); btnLetter.classList.remove("show"); };
+    const close = () => { layer.classList.remove("show"); btnLetter.classList.add("show"); };
+
+    btnClose.addEventListener("click", close);
+    btnLetter.addEventListener("click", open);
+    layer.addEventListener("click", (e) => { if (e.target === layer) close(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && layer.classList.contains("show")) close();
+    });
+
+    setTimeout(open, T.card * 1000);
+  }
+
+  /* ---------- Toque: estallido de destellos ---------- */
+  function initTouch() {
+    const scene = document.getElementById("scene");
+    const hint = document.getElementById("hint");
+    let hidden = false;
+    const at = (e) => {
+      const r = canvas.getBoundingClientRect();
+      const pt = e.touches ? e.touches[0] : e;
+      burst(pt.clientX - r.left, pt.clientY - r.top);
+      if (!hidden) { hint.classList.add("gone"); hidden = true; }
+    };
+    scene.addEventListener("touchstart", at, { passive: true });
+    scene.addEventListener("mousedown", at);
+    scene.addEventListener("dblclick", (e) => e.preventDefault());
+  }
+
+  /* ---------- Arranque ---------- */
+  let rt;
+  const onResize = () => { clearTimeout(rt); rt = setTimeout(resize, 120); };
+  window.addEventListener("resize", onResize);
+  window.addEventListener("orientationchange", () => setTimeout(resize, 260));
+
+  resize();
+  placeFlowers();
+  placePhrases();
+  initCard();
+  initTouch();
+  requestAnimationFrame(draw);
+})();
+
+</script>
+</body>
+</html>
