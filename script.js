@@ -4,6 +4,7 @@
    - Lluvia de destellos dorados (como polvo de estrellas)
    - Corazón dibujado con partículas doradas sobre el centro
    - Ramos de girasoles y frases de amor colocados alrededor
+   - Toca la pantalla para soltar un estallido de destellos
    ============================================================ */
 (() => {
   "use strict";
@@ -11,9 +12,12 @@
   const canvas = document.getElementById("sky");
   const ctx = canvas.getContext("2d");
 
+  // En pantallas pequeñas bajamos la densidad para que vaya fluido.
+  const isSmall = Math.min(window.innerWidth, window.innerHeight) < 500;
+
   let W = 0, H = 0, DPR = 1;
   function resize() {
-    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    DPR = Math.min(window.devicePixelRatio || 1, isSmall ? 1.5 : 2);
     W = canvas.clientWidth;
     H = canvas.clientHeight;
     canvas.width = Math.floor(W * DPR);
@@ -26,7 +30,7 @@
   const stars = [];
   function initStars() {
     stars.length = 0;
-    const n = Math.round((W * H) / 6000);
+    const n = Math.round((W * H) / (isSmall ? 9000 : 6000));
     for (let i = 0; i < n; i++) {
       stars.push({
         x: Math.random() * W,
@@ -40,7 +44,10 @@
 
   /* ---------- Destellos dorados que caen ---------- */
   const sparks = [];
+  const MAX_SPARKS = isSmall ? 220 : 400;
+
   function spawnSpark() {
+    if (sparks.length >= MAX_SPARKS) return;
     sparks.push({
       x: Math.random() * W,
       y: -10,
@@ -51,6 +58,24 @@
       max: Math.random() * 260 + 160,
       hue: 42 + Math.random() * 14,            // ámbar-dorado
     });
+  }
+
+  // Estallido al tocar / hacer clic
+  function burst(x, y) {
+    const n = isSmall ? 18 : 28;
+    for (let i = 0; i < n; i++) {
+      const a = (Math.PI * 2 * i) / n + Math.random() * 0.3;
+      const sp = Math.random() * 2.6 + 0.8;
+      sparks.push({
+        x, y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 0.4,
+        r: Math.random() * 2.4 + 0.8,
+        life: 0,
+        max: Math.random() * 90 + 60,
+        hue: 42 + Math.random() * 14,
+      });
+    }
   }
 
   /* ---------- Corazón de partículas ---------- */
@@ -190,11 +215,36 @@
     });
   }
 
+  /* ---------- Interacción táctil ---------- */
+  function initTouch() {
+    const scene = document.getElementById("scene");
+    const hint = document.getElementById("hint");
+    let hidden = false;
+
+    const at = (e) => {
+      const r = canvas.getBoundingClientRect();
+      const pt = e.touches ? e.touches[0] : e;
+      burst(pt.clientX - r.left, pt.clientY - r.top);
+      if (!hidden && hint) { hint.classList.add("gone"); hidden = true; }
+    };
+
+    scene.addEventListener("touchstart", (e) => { at(e); }, { passive: true });
+    scene.addEventListener("mousedown", at);
+    // Evita el zoom por doble toque en iOS
+    scene.addEventListener("dblclick", (e) => e.preventDefault());
+  }
+
   /* ---------- Arranque ---------- */
+  // En móvil la barra del navegador cambia la altura: recalculamos.
   window.addEventListener("resize", () => { resize(); initStars(); });
+  window.addEventListener("orientationchange", () => {
+    setTimeout(() => { resize(); initStars(); }, 250);
+  });
+
   resize();
   initStars();
   placeFlowers();
   placePhrases();
+  initTouch();
   requestAnimationFrame(frame);
 })();
