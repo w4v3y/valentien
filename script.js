@@ -366,17 +366,23 @@
 
   /* ---------- Frases de amor (DOM) ---------- */
   const PHRASES = [
-    { t: "Te adoro 💛",        x: 25, y: 37 },
-    { t: "Eres mi sol 🌻",     x: 11, y: 52 },
-    { t: "Eres única 💛",      x: 20, y: 63 },
-    { t: "Amor de mi vida 🤍", x: 43, y: 34 },
-    { t: "Me encantas 🌻",     x: 66, y: 37 },
-    { t: "Mi Amor 🤍",         x: 79, y: 47 },
-    { t: "Eres preciosa 💛",   x: 71, y: 57 },
-    { t: "Te Amo 🌼",          x: 35, y: 62 },
-    { t: "Siempre juntos 🤍",  x: 27, y: 76 },
-    { t: "Eres mi todo 💛",    x: 76, y: 65 },
-    { t: "My Love 💛",         x: 52, y: 55 },
+    // Cariñosas
+    { t: "Te adoro 💛",               x: 15, y: 39 },
+    { t: "Eres mi sol 🌻",            x: 13, y: 51 },
+    { t: "Eres única 💛",             x: 16, y: 70 },
+    { t: "Amor de mi vida 🤍",        x: 47, y: 36 },
+    { t: "Te Amo 🌼",                 x: 30, y: 77 },
+    { t: "Me encantas 🌻",            x: 72, y: 41 },
+    { t: "Mi Amor 🤍",                x: 84, y: 49 },
+    { t: "Eres preciosa 💛",          x: 78, y: 62 },
+    { t: "Eres mi todo 💛",           x: 80, y: 71 },
+    { t: "Siempre juntos 🤍",         x: 50, y: 79 },
+    // Las de cariño peleonero 😄
+    { t: "Mi enojona 😤",             x: 30, y: 44 },
+    { t: "Mi gruñoncita 💢",          x: 18, y: 61 },
+    { t: "Mi pequeña berrinchuda 😾", x: 50, y: 66 },
+    { t: "Mi demonio de Tasmania 😈", x: 50, y: 72 },
+    { t: "Mi terremoto 🌪️",           x: 71, y: 55 },
   ];
 
   function placePhrases() {
