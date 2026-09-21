@@ -1,18 +1,21 @@
 /* ============================================================
    Flores Amarillas · Te Amo
-   Réplica de la escena central del video: cielo oscuro con
-   destellos dorados, corazón y remolino de partículas, girasoles
-   y frases de amor brillando en tonos ámbar.
-   Optimizado para móvil (pantalla completa, sin scroll ni zoom).
+   Réplica de la animación del video, por fases:
+   estrellas → galaxia → corazón → floración → carta.
    ============================================================ */
 
 :root {
-  --gold: #ffcf3f;
-  --gold-soft: #ffe38a;
-  --amber: #ff9d1c;
-  --bg-0: #050403;
-  --text-glow: 0 0 6px rgba(255, 210, 90, .9),
-               0 0 14px rgba(255, 165, 30, .55);
+  --bg-0: #040302;
+  --cream: #fdf6e3;
+  --amber: #f2b705;
+  --amber-dp: #c98a04;
+  --ink: #3a2f16;
+  --glow: 0 0 6px rgba(255, 214, 92, .95), 0 0 16px rgba(255, 168, 30, .6);
+
+  /* Tiempos de la coreografía (deben coincidir con script.js) */
+  --t-heart: 4.2s;
+  --t-bloom: 5.0s;
+  --t-phrase: 5.8s;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -21,165 +24,303 @@ html, body {
   height: 100%;
   background: var(--bg-0);
   overflow: hidden;
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  /* Móvil: sin rebote, sin zoom accidental, sin flash al tocar */
   overscroll-behavior: none;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
+  font-family: Quicksand, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
-/* ---- Escena ---- */
+/* ---------- Escena ---------- */
 .scene {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  position: fixed;
+  inset: 0;
   overflow: hidden;
-  /* Resplandor verde-dorado hacia el centro, como en el video */
-  background:
-    radial-gradient(120% 80% at 50% 42%,
-        rgba(120, 110, 20, .55) 0%,
-        rgba(60, 55, 10, .35) 24%,
-        rgba(20, 18, 4, .9) 55%,
-        var(--bg-0) 78%),
-    var(--bg-0);
+  background: var(--bg-0);
 }
 
-/* Cielo de partículas (canvas) por encima del fondo */
-#sky {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
+#sky { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-/* ---- Núcleo central: remolino + brillo ---- */
-.core {
+/* Nubes difusas verde-doradas que se encienden con la galaxia */
+.nebula { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.neb {
   position: absolute;
-  left: 50%;
-  top: 47%;
-  width: min(190px, 46vw);
-  height: min(190px, 46vw);
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-.glow {
-  position: absolute;
-  inset: -18%;
   border-radius: 50%;
+  filter: blur(42px);
+  opacity: 0;
+  animation: nebIn 2.6s ease-out 3s both, nebDrift var(--nd, 14s) ease-in-out 3s infinite;
   background: radial-gradient(circle,
-      rgba(255, 244, 200, .95) 0%,
-      rgba(255, 205, 80, .55) 18%,
-      rgba(255, 160, 30, .25) 38%,
-      transparent 68%);
-  filter: blur(4px);
-  animation: pulse 3.2s ease-in-out infinite;
+      rgba(186, 178, 40, .55) 0%,
+      rgba(120, 116, 22, .28) 45%,
+      transparent 72%);
+}
+.neb.n1 { width: 55%; height: 26%; left: -8%;  top: 16%; }
+.neb.n2 { width: 50%; height: 24%; right: -6%; top: 10%; --nd: 17s; }
+.neb.n3 { width: 46%; height: 22%; left: 2%;   bottom: 16%; --nd: 19s; }
+.neb.n4 { width: 52%; height: 24%; right: -4%; bottom: 10%; --nd: 15s; }
+.neb.n5 { width: 70%; height: 30%; left: 15%;  top: 38%; --nd: 21s; opacity: 0; }
+
+@keyframes nebIn { from { opacity: 0; } to { opacity: .85; } }
+@keyframes nebDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(2%, -3%, 0) scale(1.12); }
 }
 
-.swirl {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background:
-    conic-gradient(from 0deg,
-        transparent 0deg,
-        rgba(255, 223, 120, .0) 40deg,
-        rgba(255, 223, 120, .85) 70deg,
-        transparent 110deg,
-        transparent 180deg,
-        rgba(255, 200, 70, .0) 220deg,
-        rgba(255, 235, 160, .8) 250deg,
-        transparent 300deg);
-  -webkit-mask: radial-gradient(circle, transparent 12%, #000 22%, #000 60%, transparent 78%);
-          mask: radial-gradient(circle, transparent 12%, #000 22%, #000 60%, transparent 78%);
-  filter: blur(1px) drop-shadow(0 0 8px rgba(255, 200, 80, .7));
-  animation: spin 6s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pulse {
-  0%, 100% { opacity: .8; transform: scale(1); }
-  50%      { opacity: 1;  transform: scale(1.12); }
-}
-
-/* ---- Texto sobre el corazón ---- */
+/* ---------- Texto dentro del corazón ---------- */
 .heart-text {
   position: absolute;
   left: 50%;
-  top: calc(13% + env(safe-area-inset-top, 0px));
+  top: calc(24% + env(safe-area-inset-top, 0px));
   transform: translateX(-50%);
   color: #fff;
-  font-size: clamp(1.1rem, 5.5vw, 1.8rem);
+  font-size: clamp(.95rem, 4.4vw, 1.5rem);
   font-weight: 600;
   letter-spacing: .5px;
-  text-shadow: var(--text-glow);
+  text-shadow: var(--glow);
   white-space: nowrap;
-  animation: floaty 4s ease-in-out infinite;
+  opacity: 0;
+  animation: softIn 1.2s ease-out calc(var(--t-heart) + 1.5s) both,
+             floaty 4s ease-in-out calc(var(--t-heart) + 2.7s) infinite;
 }
-.heart-text .em { filter: drop-shadow(0 0 6px rgba(255, 190, 40, .8)); }
 
-/* ---- Girasoles / ramos ---- */
+/* ---------- Ramos de girasoles ---------- */
 .flower {
   position: absolute;
-  font-size: var(--size, 2.4rem);
-  filter: drop-shadow(0 0 10px rgba(255, 190, 40, .55));
-  animation: sway var(--dur, 5s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
   transform: translate(-50%, -50%);
-  will-change: transform;
+  opacity: 0;
+  animation: bloom 1s cubic-bezier(.2, 1.4, .4, 1) var(--delay, 0s) both;
+  pointer-events: none;
+}
+.flower i {
+  display: block;
+  font-style: normal;
+  font-size: var(--size, 2.4rem);
+  line-height: 1;
+  filter: drop-shadow(0 0 10px rgba(255, 196, 46, .65));
+  animation: sway var(--dur, 5s) ease-in-out var(--delay, 0s) infinite;
 }
 
+@keyframes bloom {
+  0%   { opacity: 0; transform: translate(-50%, -20%) scale(.1) rotate(-12deg); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+}
 @keyframes sway {
-  0%, 100% { transform: translate(-50%, -50%) rotate(-5deg) scale(1); }
-  50%      { transform: translate(-50%, -54%) rotate(5deg) scale(1.05); }
+  0%, 100% { transform: rotate(-5deg) scale(1); }
+  50%      { transform: rotate(5deg) scale(1.06); }
 }
 
-/* ---- Frases de amor ---- */
+/* Ramo grande del centro, sobre la galaxia */
+.center-bouquet {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(2.6rem, 12vw, 4.2rem);
+  line-height: 1;
+  filter: drop-shadow(0 0 18px rgba(255, 200, 60, .85));
+  opacity: 0;
+  animation: bloom 1.3s cubic-bezier(.2, 1.3, .4, 1) calc(var(--t-bloom) + .2s) both,
+             floaty2 5s ease-in-out calc(var(--t-bloom) + 1.5s) infinite;
+  pointer-events: none;
+}
+
+/* ---------- Frases de amor ---------- */
 .phrase {
   position: absolute;
   transform: translate(-50%, -50%);
   color: #fff;
-  font-size: clamp(.7rem, 3.2vw, 1rem);
-  font-weight: 500;
+  font-size: clamp(.68rem, 3vw, .95rem);
+  font-weight: 600;
   white-space: nowrap;
-  text-shadow: var(--text-glow);
+  text-shadow: var(--glow);
   opacity: 0;
-  animation: appear var(--dur, 6s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
+  animation: softIn .9s ease-out var(--delay, 0s) both,
+             twinkle var(--dur, 7s) ease-in-out var(--delay, 0s) infinite;
+  pointer-events: none;
 }
 
-@keyframes appear {
-  0%, 100% { opacity: 0; transform: translate(-50%, -46%) scale(.9); }
-  18%, 82% { opacity: .95; transform: translate(-50%, -50%) scale(1); }
+@keyframes softIn {
+  from { opacity: 0; transform: translate(-50%, -40%) scale(.85); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
-
+@keyframes twinkle {
+  0%, 100% { opacity: .95; }
+  50%      { opacity: .45; }
+}
 @keyframes floaty {
   0%, 100% { transform: translateX(-50%) translateY(0); }
-  50%      { transform: translateX(-50%) translateY(-8px); }
+  50%      { transform: translateX(-50%) translateY(-7px); }
+}
+@keyframes floaty2 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -54%) scale(1.04); }
 }
 
-/* ---- Pista de toque (móvil) ---- */
+/* ---------- Carta de amor ---------- */
+.card-layer {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) 16px
+           max(16px, env(safe-area-inset-bottom, 0px));
+  background: rgba(8, 6, 2, .55);
+  backdrop-filter: blur(2px);
+  z-index: 40;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .5s ease, visibility .5s;
+}
+.card-layer.show { opacity: 1; visibility: visible; }
+
+.card-wrap {
+  width: min(88vw, 340px);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  transform: scale(.82) translateY(14px);
+  transition: transform .55s cubic-bezier(.2, 1.3, .4, 1);
+}
+.card-layer.show .card-wrap { transform: scale(1) translateY(0); }
+
+.card {
+  width: 100%;
+  border-radius: 14px;
+  padding: 10px;
+  overflow: hidden;
+  /* Fondo acuarela ámbar */
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 233, 150, .95), transparent 55%),
+    radial-gradient(circle at 85% 80%, rgba(233, 176, 22, .9), transparent 58%),
+    linear-gradient(150deg, #f6cf5c 0%, #edb420 48%, #f3c94f 100%);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .6), 0 0 34px rgba(255, 190, 40, .35);
+}
+
+.card-inner {
+  border-radius: 10px;
+  background: linear-gradient(170deg, #fffdf4 0%, #fdf4dd 100%);
+  padding: 20px 16px 12px;
+  text-align: center;
+  color: var(--ink);
+  position: relative;
+  overflow: hidden;
+}
+
+.card h2 {
+  font-family: "Dancing Script", cursive;
+  font-size: clamp(1.9rem, 8vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.card p {
+  font-size: clamp(.78rem, 3.4vw, .9rem);
+  line-height: 1.5;
+  margin-bottom: 10px;
+  color: #4a3d1e;
+}
+.card .sign {
+  font-family: "Dancing Script", cursive;
+  font-size: clamp(1.6rem, 7vw, 2.1rem);
+  font-weight: 600;
+  margin: 6px 0 2px;
+  color: #2f2712;
+}
+
+/* Corazoncitos dibujados */
+.card .hearts {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  color: var(--amber-dp);
+  margin-bottom: -4px;
+}
+.card .hearts span:nth-child(2) { font-size: 1.5rem; }
+
+.card .bouquet {
+  font-size: clamp(3.4rem, 17vw, 4.6rem);
+  line-height: 1.05;
+  margin-top: 2px;
+  filter: drop-shadow(0 6px 10px rgba(120, 90, 10, .35));
+}
+
+.card .tag {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 5px 20px 4px;
+  border-radius: 0 0 12px 12px;
+  background: #fbfaf5;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .12);
+  font-size: .92rem;
+  letter-spacing: .5px;
+  color: #4a3d1e;
+}
+
+.btn-close {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: #4a3a05;
+  padding: 11px 30px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffd95e 0%, #f0b70d 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .45), 0 0 20px rgba(255, 190, 40, .5);
+  flex: none;
+}
+.btn-close:active { transform: translateY(1px); }
+.btn-close:focus-visible { outline: 3px solid #fff3c4; outline-offset: 3px; }
+
+/* Botón para volver a abrir la carta */
+.btn-letter {
+  position: absolute;
+  left: 50%;
+  bottom: calc(4% + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 30;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .85rem;
+  font-weight: 700;
+  color: #4a3a05;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffd95e 0%, #f0b70d 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .5), 0 0 18px rgba(255, 190, 40, .45);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .5s ease, visibility .5s;
+}
+.btn-letter.show { opacity: 1; visibility: visible; }
+.btn-letter:focus-visible { outline: 3px solid #fff3c4; outline-offset: 3px; }
+
+/* ---------- Pista de toque ---------- */
 .hint {
   position: absolute;
   left: 50%;
-  bottom: calc(6% + env(safe-area-inset-bottom, 0px));
+  bottom: calc(13% + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
-  color: rgba(255, 240, 200, .75);
-  font-size: .85rem;
+  color: rgba(255, 240, 200, .7);
+  font-size: .8rem;
   letter-spacing: .6px;
-  text-shadow: var(--text-glow);
-  animation: floaty 3s ease-in-out infinite;
-  transition: opacity .6s ease;
+  text-shadow: var(--glow);
   pointer-events: none;
+  opacity: 0;
+  animation: softIn 1s ease-out 7.5s both, floaty 3s ease-in-out 8.5s infinite;
+  transition: opacity .6s ease;
 }
-.hint.gone { opacity: 0; }
+.hint.gone { opacity: 0 !important; animation: none; }
 
-/* Respeta a quien prefiere menos movimiento */
 @media (prefers-reduced-motion: reduce) {
-  .swirl, .glow, .flower, .phrase, .heart-text, .hint {
-    animation-duration: .001s;
-    animation-iteration-count: 1;
+  .neb, .flower, .flower i, .phrase, .heart-text, .center-bouquet, .hint {
+    animation-duration: .01s !important;
+    animation-iteration-count: 1 !important;
   }
 }

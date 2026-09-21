@@ -1,250 +1,445 @@
 /* ============================================================
-   Flores Amarillas · Te Amo  —  motor de la escena
-   - Cielo de estrellas tenues
-   - Lluvia de destellos dorados (como polvo de estrellas)
-   - Corazón dibujado con partículas doradas sobre el centro
-   - Ramos de girasoles y frases de amor colocados alrededor
-   - Toca la pantalla para soltar un estallido de destellos
+   Flores Amarillas · Te Amo — motor de la animación
+   Coreografía del video, por fases:
+     0.0s  cielo estrellado + florecitas cayendo con estela
+     2.8s  estalla la galaxia dorada (disco + espiral)
+     4.2s  nace el corazón y crece
+     5.0s  florecen los ramos de girasoles
+     5.8s  aparecen las frases de amor
+     6.0s  fuente de partículas del centro hacia el corazón
+    12.0s  se abre la carta de amor
    ============================================================ */
 (() => {
   "use strict";
 
+  /* ---------- Línea de tiempo (segundos) ---------- */
+  const T = {
+    galaxy: 2.8,
+    heart:  4.2,
+    bloom:  5.0,
+    phrase: 5.8,
+    jet:    6.0,
+    card:  12.0,
+  };
+
   const canvas = document.getElementById("sky");
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { alpha: true });
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // En pantallas pequeñas bajamos la densidad para que vaya fluido.
-  const isSmall = Math.min(window.innerWidth, window.innerHeight) < 500;
+  let W = 0, H = 0, DPR = 1, small = false;
+  let cx = 0, cy = 0;            // centro de la galaxia
+  let hx = 0, hy = 0, hs = 1;    // centro y escala del corazón
 
-  let W = 0, H = 0, DPR = 1;
+  const clamp01 = (v) => v < 0 ? 0 : v > 1 ? 1 : v;
+  const easeOut  = (p) => 1 - Math.pow(1 - p, 3);
+  const easeBack = (p) => { const c = 1.70158 + 1; return 1 + c * Math.pow(p - 1, 3) + 1.70158 * Math.pow(p - 1, 2); };
+
+  /* ---------- Dimensionado ---------- */
   function resize() {
-    DPR = Math.min(window.devicePixelRatio || 1, isSmall ? 1.5 : 2);
     W = canvas.clientWidth;
     H = canvas.clientHeight;
-    canvas.width = Math.floor(W * DPR);
-    canvas.height = Math.floor(H * DPR);
+    small = Math.min(W, H) < 500;
+    DPR = Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2);
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    cx = W * 0.5;  cy = H * 0.50;      // núcleo de la galaxia
+    hx = W * 0.5;  hy = H * 0.255;     // centro del corazón
+    hs = Math.min(W * 0.016, H * 0.0085);  // escala del corazón
+
+    buildStars();
+    buildGalaxy();
     buildHeart();
   }
 
-  /* ---------- Estrellas de fondo ---------- */
-  const stars = [];
-  function initStars() {
-    stars.length = 0;
-    const n = Math.round((W * H) / (isSmall ? 9000 : 6000));
+  /* ---------- Estrellas ---------- */
+  let stars = [];
+  function buildStars() {
+    const n = Math.round((W * H) / (small ? 7000 : 5200));
+    stars = new Array(n);
     for (let i = 0; i < n; i++) {
-      stars.push({
+      stars[i] = {
         x: Math.random() * W,
         y: Math.random() * H,
-        r: Math.random() * 1.3 + 0.2,
-        tw: Math.random() * Math.PI * 2,       // fase de parpadeo
-        sp: Math.random() * 0.8 + 0.2,         // deriva vertical lenta
-      });
+        r: Math.random() * 1.2 + 0.25,
+        ph: Math.random() * Math.PI * 2,
+        sp: Math.random() * 1.6 + 0.4,
+      };
     }
   }
 
-  /* ---------- Destellos dorados que caen ---------- */
-  const sparks = [];
-  const MAX_SPARKS = isSmall ? 220 : 400;
+  /* ---------- Galaxia: disco + brazos espirales ---------- */
+  let gal = [];
+  let R = 0;
+  function buildGalaxy() {
+    R = W * 0.74;
+    const n = small ? 2600 : 4200;
+    gal = new Array(n);
+    for (let i = 0; i < n; i++) {
+      // Densidad mayor hacia el centro
+      const u = Math.pow(Math.random(), 0.62);
+      const r = 0.06 * R + u * R;
+      // Dos brazos logarítmicos con dispersión
+      const arm = (i % 2) * Math.PI;
+      const spread = (Math.random() - 0.5) * (1.1 + 2.2 * u);
+      const a0 = 3.1 * Math.log(r / (R * 0.06)) + arm + spread;
+      gal[i] = {
+        r,
+        a: a0,
+        // rotación diferencial: el centro gira más rápido
+        w: 0.42 / Math.pow(r / R + 0.14, 0.78),
+        s: Math.random() * 1.0 + 0.6,
+        b: 0.35 + 0.65 * (1 - u),          // brillo
+        z: (Math.random() - 0.5) * 0.10,   // grosor del disco
+        t: Math.random() * Math.PI * 2,    // fase de centelleo
+        d: 0.35 + Math.random() * 0.65,    // retardo de aparición
+      };
+    }
+  }
 
-  function spawnSpark() {
-    if (sparks.length >= MAX_SPARKS) return;
-    sparks.push({
+  /* ---------- Corazón de glitter ---------- */
+  let heart = [];
+  function buildHeart() {
+    const n = small ? 900 : 1300;
+    heart = new Array(n);
+    for (let i = 0; i < n; i++) {
+      const t = Math.random() * Math.PI * 2;
+      const px = 16 * Math.pow(Math.sin(t), 3);
+      const py = 13 * Math.cos(t) - 5 * Math.cos(2 * t)
+               - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+      // Banda gruesa: desplazamiento aleatorio alrededor de la curva
+      const jx = (Math.random() - 0.5) * 1.7;
+      const jy = (Math.random() - 0.5) * 1.7;
+      heart[i] = {
+        x: px + jx,
+        y: -py + jy,
+        s: Math.random() * 1.1 + 0.7,
+        t: Math.random() * Math.PI * 2,
+        b: 0.45 + Math.random() * 0.55,
+      };
+    }
+  }
+
+  /* ---------- Partículas sueltas ---------- */
+  const petals = [];   // florecitas que caen con estela
+  const jets = [];     // fuente del centro hacia el corazón
+  const bursts = [];   // estallidos al tocar
+  const GLYPHS = ["🌻", "🌼", "💛"];
+
+  function spawnPetal() {
+    if (petals.length > (small ? 26 : 42)) return;
+    petals.push({
       x: Math.random() * W,
-      y: -10,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: Math.random() * 1.6 + 0.6,
-      r: Math.random() * 2.2 + 0.6,
-      life: 0,
-      max: Math.random() * 260 + 160,
-      hue: 42 + Math.random() * 14,            // ámbar-dorado
+      y: -30,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: Math.random() * 1.5 + 0.7,
+      sz: Math.random() * 12 + 9,
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 0.04,
+      g: GLYPHS[(Math.random() * GLYPHS.length) | 0],
+      trail: Math.random() < 0.3,
     });
   }
 
-  // Estallido al tocar / hacer clic
+  function spawnJet() {
+    jets.push({
+      x: cx + (Math.random() - 0.5) * 14,
+      y: cy - 4,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: -(Math.random() * 1.5 + 1.1),
+      life: 0,
+      max: Math.random() * 60 + 55,
+      s: Math.random() * 1.6 + 0.6,
+    });
+  }
+
   function burst(x, y) {
-    const n = isSmall ? 18 : 28;
+    const n = small ? 20 : 30;
     for (let i = 0; i < n; i++) {
-      const a = (Math.PI * 2 * i) / n + Math.random() * 0.3;
-      const sp = Math.random() * 2.6 + 0.8;
-      sparks.push({
+      const a = (Math.PI * 2 * i) / n + Math.random() * 0.35;
+      const sp = Math.random() * 2.8 + 0.9;
+      bursts.push({
         x, y,
         vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp - 0.4,
-        r: Math.random() * 2.4 + 0.8,
+        vy: Math.sin(a) * sp - 0.5,
         life: 0,
-        max: Math.random() * 90 + 60,
-        hue: 42 + Math.random() * 14,
+        max: Math.random() * 55 + 45,
+        s: Math.random() * 1.9 + 0.7,
       });
     }
   }
 
-  /* ---------- Corazón de partículas ---------- */
-  let heartPts = [];
-  const HEART_CY = 0.24;   // altura del corazón (fracción de la escena)
-  function buildHeart() {
-    heartPts = [];
-    const cx = W * 0.5;
-    const cy = H * HEART_CY;
-    // Escala relativa al tamaño de pantalla
-    const s = Math.min(W, H) * 0.022;
-    for (let t = 0; t < Math.PI * 2; t += 0.08) {
-      const hx = 16 * Math.pow(Math.sin(t), 3);
-      const hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t)
-               - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-      heartPts.push({
-        x: cx + hx * s,
-        y: cy - hy * s,
-        ph: Math.random() * Math.PI * 2,
-      });
-    }
-  }
+  /* ---------- Dibujo ---------- */
+  const t0 = performance.now();
+  let last = t0;
 
-  /* ---------- Bucle de animación ---------- */
-  let last = performance.now();
-  function frame(now) {
-    const dt = Math.min(2, (now - last) / 16.7);
+  function draw(now) {
+    const time = (now - t0) / 1000;              // segundos desde el inicio
+    const dt = Math.min(2.2, (now - last) / 16.7);
     last = now;
 
     ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = "lighter";
 
-    // Estrellas
-    for (const st of stars) {
-      st.tw += 0.05 * dt;
-      st.y += st.sp * 0.05 * dt;
-      if (st.y > H) st.y = 0;
-      const a = 0.35 + 0.35 * Math.sin(st.tw);
+    /* --- Estrellas --- */
+    const starIn = clamp01(time / 1.2);
+    for (const s of stars) {
+      s.ph += 0.045 * dt;
+      s.y += s.sp * 0.04 * dt;
+      if (s.y > H) { s.y = -2; s.x = Math.random() * W; }
+      const a = (0.30 + 0.35 * Math.sin(s.ph)) * starIn;
+      ctx.fillStyle = "rgba(255,247,222," + a.toFixed(3) + ")";
+      ctx.fillRect(s.x, s.y, s.r, s.r);
+    }
+
+    /* --- Galaxia --- */
+    const gp = clamp01((time - T.galaxy) / 1.6);
+    if (gp > 0) {
+      const grow = easeOut(gp);
+      const squash = 0.30;
+
+      // Resplandor del disco
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(1, squash);
+      const dg = ctx.createRadialGradient(0, 0, 0, 0, 0, R * grow);
+      dg.addColorStop(0.00, "rgba(255,252,226," + (0.78 * grow) + ")");
+      dg.addColorStop(0.16, "rgba(255,226,130," + (0.46 * grow) + ")");
+      dg.addColorStop(0.45, "rgba(214,186,46,"  + (0.24 * grow) + ")");
+      dg.addColorStop(1.00, "rgba(120,110,20,0)");
+      ctx.fillStyle = dg;
       ctx.beginPath();
-      ctx.fillStyle = `rgba(255, 244, 210, ${a})`;
-      ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+      ctx.arc(0, 0, R * grow, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Polvo de estrellas en brazos espirales
+      for (const p of gal) {
+        const vis = clamp01((grow - p.d * 0.5) / 0.5);
+        if (vis <= 0) continue;
+        p.a += p.w * 0.012 * dt;
+        p.t += 0.09 * dt;
+        const rr = p.r * grow;
+        const x = cx + Math.cos(p.a) * rr;
+        const y = cy + Math.sin(p.a) * rr * squash + p.z * rr * squash;
+        const tw = 0.55 + 0.45 * Math.sin(p.t);
+        const a = Math.min(1, p.b * tw * vis * 1.25);
+        ctx.fillStyle = "rgba(255," + (228 + ((p.b * 26) | 0)) + ",150," + a.toFixed(3) + ")";
+        ctx.fillRect(x, y, p.s, p.s);
+      }
+
+      // Núcleo brillante
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 58 * grow);
+      core.addColorStop(0, "rgba(255,255,250," + (1.0 * grow) + ")");
+      core.addColorStop(0.3, "rgba(255,240,175," + (0.62 * grow) + ")");
+      core.addColorStop(1, "rgba(255,190,60,0)");
+      ctx.fillStyle = core;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 58 * grow, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Destellos dorados
-    if (Math.random() < 0.6) spawnSpark();
-    for (let i = sparks.length - 1; i >= 0; i--) {
-      const p = sparks[i];
-      p.life += dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      const fade = 1 - p.life / p.max;
-      if (fade <= 0 || p.y > H + 10) { sparks.splice(i, 1); continue; }
-      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
-      g.addColorStop(0, `hsla(${p.hue}, 100%, 75%, ${fade})`);
-      g.addColorStop(1, `hsla(${p.hue}, 100%, 55%, 0)`);
-      ctx.fillStyle = g;
+    /* --- Corazón --- */
+    const hp = clamp01((time - T.heart) / 1.7);
+    if (hp > 0) {
+      const sc = (reduced ? 1 : easeBack(hp)) * hs;
+      const beat = 1 + Math.sin(time * 2.1) * 0.028;
+      for (const p of heart) {
+        p.t += 0.10 * dt;
+        const tw = 0.5 + 0.5 * Math.sin(p.t);
+        const x = hx + p.x * sc * beat;
+        const y = hy + p.y * sc * beat;
+        const a = Math.min(1, p.b * tw * hp * 1.3);
+        const col = "255," + (246 - ((tw * 34) | 0)) + ",128,";
+        ctx.fillStyle = "rgba(" + col + (a * 0.22).toFixed(3) + ")";
+        ctx.fillRect(x - p.s * 0.9, y - p.s * 0.9, p.s * 2.8, p.s * 2.8);
+        ctx.fillStyle = "rgba(" + col + a.toFixed(3) + ")";
+        ctx.fillRect(x, y, p.s, p.s);
+      }
+      // Halo suave del corazón
+      const hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, 20 * hs * hp);
+      hg.addColorStop(0, "rgba(255,238,170," + (0.10 * hp) + ")");
+      hg.addColorStop(1, "rgba(255,200,60,0)");
+      ctx.fillStyle = hg;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r * 4, 0, Math.PI * 2);
+      ctx.arc(hx, hy, 20 * hs * hp, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Corazón brillante de partículas
-    const beat = 1 + Math.sin(now / 500) * 0.03;
-    const hcx = W * 0.5, hcy = H * HEART_CY;
-    for (const hp of heartPts) {
-      hp.ph += 0.08 * dt;
-      const tw = 0.7 + 0.3 * Math.sin(hp.ph);
-      const x = hcx + (hp.x - hcx) * beat;
-      const y = hcy + (hp.y - hcy) * beat;
-      const rad = 4.2 * tw;
-      const g = ctx.createRadialGradient(x, y, 0, x, y, rad * 3);
-      g.addColorStop(0, `rgba(255, 255, 240, ${tw})`);
-      g.addColorStop(0.25, `rgba(255, 236, 170, ${tw})`);
-      g.addColorStop(0.6, `rgba(255, 195, 60, ${tw * 0.6})`);
-      g.addColorStop(1, "rgba(255, 160, 30, 0)");
-      ctx.fillStyle = g;
+    /* --- Fuente del centro hacia el corazón --- */
+    if (time > T.jet && !reduced) {
+      if (Math.random() < 0.7) spawnJet();
+    }
+    for (let i = jets.length - 1; i >= 0; i--) {
+      const p = jets[i];
+      p.life += dt; p.x += p.vx * dt; p.y += p.vy * dt;
+      p.vy *= 0.994;
+      const f = 1 - p.life / p.max;
+      if (f <= 0) { jets.splice(i, 1); continue; }
+      ctx.fillStyle = "rgba(255,244,190," + (f * 0.75).toFixed(3) + ")";
+      ctx.fillRect(p.x, p.y, p.s, p.s);
+    }
+
+    /* --- Florecitas cayendo con estela --- */
+    if (Math.random() < (time < T.galaxy ? 0.34 : 0.12)) spawnPetal();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (let i = petals.length - 1; i >= 0; i--) {
+      const p = petals[i];
+      p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+      if (p.y > H + 40) { petals.splice(i, 1); continue; }
+      if (p.trail) {
+        const g = ctx.createLinearGradient(p.x, p.y - 26, p.x, p.y);
+        g.addColorStop(0, "rgba(255,226,140,0)");
+        g.addColorStop(1, "rgba(255,226,140,.30)");
+        ctx.strokeStyle = g;
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(p.x - p.vx * 16, p.y - 26);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+      }
+      // Resplandor dorado detrás de la flor (modo aditivo)
+      const halo = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.sz * 1.25);
+      halo.addColorStop(0, "rgba(255,226,120,.55)");
+      halo.addColorStop(1, "rgba(255,190,50,0)");
+      ctx.fillStyle = halo;
       ctx.beginPath();
-      ctx.arc(x, y, rad * 3, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.sz * 1.25, 0, Math.PI * 2);
       ctx.fill();
+      // La flor en sí, en modo normal (el emoji no admite mezcla aditiva)
+      ctx.globalCompositeOperation = "source-over";
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.font = p.sz + "px serif";
+      ctx.fillText(p.g, 0, 0);
+      ctx.restore();
+      ctx.globalCompositeOperation = "lighter";
+    }
+
+    /* --- Estallidos al tocar --- */
+    for (let i = bursts.length - 1; i >= 0; i--) {
+      const p = bursts[i];
+      p.life += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.012 * dt;
+      const f = 1 - p.life / p.max;
+      if (f <= 0) { bursts.splice(i, 1); continue; }
+      ctx.fillStyle = "rgba(255,238,160," + f.toFixed(3) + ")";
+      ctx.fillRect(p.x, p.y, p.s, p.s);
     }
 
     ctx.globalCompositeOperation = "source-over";
-    requestAnimationFrame(frame);
+    requestAnimationFrame(draw);
   }
 
-  /* ---------- Ramos de girasoles ---------- */
-  // Posiciones en % de la escena (x, y) y tamaño en rem.
+  /* ---------- Ramos de girasoles (DOM) ---------- */
   const FLOWERS = [
-    { x: 8,  y: 30, s: 2.2 }, { x: 16, y: 44, s: 3.0 },
-    { x: 12, y: 62, s: 2.6 }, { x: 30, y: 70, s: 2.0 },
-    { x: 50, y: 40, s: 3.4 }, { x: 62, y: 68, s: 2.4 },
-    { x: 84, y: 30, s: 3.0 }, { x: 88, y: 50, s: 2.4 },
-    { x: 90, y: 70, s: 2.2 }, { x: 72, y: 26, s: 1.8 },
-    { x: 28, y: 24, s: 1.8 }, { x: 46, y: 82, s: 2.0 },
+    { x:  9, y: 36, s: 1.7 }, { x: 17, y: 48, s: 2.4 }, { x: 10, y: 61, s: 1.9 },
+    { x: 25, y: 71, s: 1.6 }, { x: 34, y: 41, s: 1.2 }, { x: 45, y: 80, s: 1.8 },
+    { x: 62, y: 74, s: 1.5 }, { x: 69, y: 43, s: 1.2 }, { x: 85, y: 35, s: 2.3 },
+    { x: 92, y: 54, s: 1.8 }, { x: 88, y: 69, s: 1.6 }, { x: 74, y: 27, s: 1.3 },
+    { x: 23, y: 26, s: 1.2 }, { x: 56, y: 32, s: 1.1 },
   ];
-  const BOUQUETS = ["🌻", "🌻", "💐"];
+  const BOUQUET = ["🌻", "🌼", "🌻", "🌻", "🌼"];
+
   function placeFlowers() {
     const box = document.getElementById("flowers");
+    const frag = document.createDocumentFragment();
     FLOWERS.forEach((f, i) => {
       const el = document.createElement("div");
       el.className = "flower";
-      el.textContent = BOUQUETS[i % BOUQUETS.length];
       el.style.left = f.x + "%";
       el.style.top = f.y + "%";
-      el.style.setProperty("--size", f.s + "rem");
+      el.style.setProperty("--delay", (5.0 + i * 0.11).toFixed(2) + "s");
       el.style.setProperty("--dur", (4 + Math.random() * 3).toFixed(2) + "s");
-      el.style.setProperty("--delay", (Math.random() * 2).toFixed(2) + "s");
-      box.appendChild(el);
+      const g = document.createElement("i");
+      g.textContent = BOUQUET[i % BOUQUET.length];
+      g.style.setProperty("--size", f.s + "rem");
+      g.style.setProperty("--dur", (4 + Math.random() * 3).toFixed(2) + "s");
+      g.style.setProperty("--delay", (5.6 + i * 0.11).toFixed(2) + "s");
+      el.appendChild(g);
+      frag.appendChild(el);
     });
+    box.appendChild(frag);
   }
 
-  /* ---------- Frases de amor ---------- */
+  /* ---------- Frases de amor (DOM) ---------- */
   const PHRASES = [
-    { t: "Te adoro 💛",       x: 26, y: 33 },
-    { t: "Eres mi sol 💛",    x: 10, y: 50 },
-    { t: "Eres única 💛",     x: 18, y: 58 },
-    { t: "Amor de mi vida",   x: 42, y: 30 },
-    { t: "Me encantas",       x: 64, y: 34 },
-    { t: "Mi Amor 💛",        x: 80, y: 44 },
-    { t: "Eres preciosa 💛",  x: 70, y: 50 },
-    { t: "Te Amo 💛",         x: 40, y: 60 },
-    { t: "Siempre juntos 🤍", x: 30, y: 82 },
-    { t: "Eres mi todo 💛",   x: 82, y: 78 },
+    { t: "Te adoro 💛",        x: 25, y: 37 },
+    { t: "Eres mi sol 🌻",     x: 11, y: 52 },
+    { t: "Eres única 💛",      x: 20, y: 63 },
+    { t: "Amor de mi vida 🤍", x: 43, y: 34 },
+    { t: "Me encantas 🌻",     x: 66, y: 37 },
+    { t: "Mi Amor 🤍",         x: 79, y: 47 },
+    { t: "Eres preciosa 💛",   x: 71, y: 57 },
+    { t: "Te Amo 🌼",          x: 35, y: 62 },
+    { t: "Siempre juntos 🤍",  x: 27, y: 76 },
+    { t: "Eres mi todo 💛",    x: 76, y: 65 },
+    { t: "My Love 💛",         x: 52, y: 55 },
   ];
+
   function placePhrases() {
     const box = document.getElementById("phrases");
-    PHRASES.forEach((p) => {
+    const frag = document.createDocumentFragment();
+    PHRASES.forEach((p, i) => {
       const el = document.createElement("div");
       el.className = "phrase";
       el.textContent = p.t;
       el.style.left = p.x + "%";
       el.style.top = p.y + "%";
-      el.style.setProperty("--dur", (5 + Math.random() * 4).toFixed(2) + "s");
-      el.style.setProperty("--delay", (Math.random() * 4).toFixed(2) + "s");
-      box.appendChild(el);
+      el.style.setProperty("--delay", (5.8 + i * 0.16).toFixed(2) + "s");
+      el.style.setProperty("--dur", (6 + Math.random() * 4).toFixed(2) + "s");
+      frag.appendChild(el);
     });
+    box.appendChild(frag);
   }
 
-  /* ---------- Interacción táctil ---------- */
+  /* ---------- Carta de amor ---------- */
+  function initCard() {
+    const layer = document.getElementById("cardLayer");
+    const btnClose = document.getElementById("btnClose");
+    const btnLetter = document.getElementById("btnLetter");
+
+    const open = () => { layer.classList.add("show"); btnLetter.classList.remove("show"); };
+    const close = () => { layer.classList.remove("show"); btnLetter.classList.add("show"); };
+
+    btnClose.addEventListener("click", close);
+    btnLetter.addEventListener("click", open);
+    layer.addEventListener("click", (e) => { if (e.target === layer) close(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && layer.classList.contains("show")) close();
+    });
+
+    setTimeout(open, T.card * 1000);
+  }
+
+  /* ---------- Toque: estallido de destellos ---------- */
   function initTouch() {
     const scene = document.getElementById("scene");
     const hint = document.getElementById("hint");
     let hidden = false;
-
     const at = (e) => {
       const r = canvas.getBoundingClientRect();
       const pt = e.touches ? e.touches[0] : e;
       burst(pt.clientX - r.left, pt.clientY - r.top);
-      if (!hidden && hint) { hint.classList.add("gone"); hidden = true; }
+      if (!hidden) { hint.classList.add("gone"); hidden = true; }
     };
-
-    scene.addEventListener("touchstart", (e) => { at(e); }, { passive: true });
+    scene.addEventListener("touchstart", at, { passive: true });
     scene.addEventListener("mousedown", at);
-    // Evita el zoom por doble toque en iOS
     scene.addEventListener("dblclick", (e) => e.preventDefault());
   }
 
   /* ---------- Arranque ---------- */
-  // En móvil la barra del navegador cambia la altura: recalculamos.
-  window.addEventListener("resize", () => { resize(); initStars(); });
-  window.addEventListener("orientationchange", () => {
-    setTimeout(() => { resize(); initStars(); }, 250);
-  });
+  let rt;
+  const onResize = () => { clearTimeout(rt); rt = setTimeout(resize, 120); };
+  window.addEventListener("resize", onResize);
+  window.addEventListener("orientationchange", () => setTimeout(resize, 260));
 
   resize();
-  initStars();
   placeFlowers();
   placePhrases();
+  initCard();
   initTouch();
-  requestAnimationFrame(frame);
+  requestAnimationFrame(draw);
 })();

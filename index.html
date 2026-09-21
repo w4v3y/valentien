@@ -3,39 +3,61 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<meta name="theme-color" content="#050403" />
+<meta name="theme-color" content="#040302" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Flores Amarillas" />
-<title>Flores Amarillas · Te Amo</title>
-<meta name="description" content="Animación romántica de flores amarillas: corazón de partículas doradas, girasoles y frases de amor sobre un cielo estrellado." />
+<title>Flores Amarillas para Ti 🌻</title>
+<meta name="description" content="Animación romántica de flores amarillas: galaxia dorada, corazón de glitter, girasoles y una carta de amor." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;600&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Escena central del video: cielo estrellado + destellos dorados,
-       corazón de partículas, remolino de luz, girasoles y frases de amor. -->
   <main class="scene" id="scene">
     <canvas id="sky"></canvas>
 
-    <!-- Núcleo de luz / remolino central -->
-    <div class="core">
-      <div class="swirl"></div>
-      <div class="glow"></div>
+    <!-- Nubes difusas verde-doradas -->
+    <div class="nebula" aria-hidden="true">
+      <div class="neb n1"></div><div class="neb n2"></div>
+      <div class="neb n3"></div><div class="neb n4"></div>
+      <div class="neb n5"></div>
     </div>
 
-    <!-- Frase principal sobre el corazón -->
-    <div class="heart-text">Te amo <span class="em">💛</span> 🌻</div>
+    <!-- Frase dentro del corazón -->
+    <div class="heart-text">Te amo 🤍 🌻</div>
 
-    <!-- Ramos de girasoles repartidos por la escena -->
-    <div class="flowers" id="flowers"></div>
+    <!-- Ramo grande sobre la galaxia -->
+    <div class="center-bouquet" aria-hidden="true">🌻</div>
 
-    <!-- Frases de amor flotantes -->
-    <div class="phrases" id="phrases"></div>
+    <!-- Ramos y frases (generados por script.js) -->
+    <div class="flowers" id="flowers" aria-hidden="true"></div>
+    <div class="phrases" id="phrases" aria-hidden="true"></div>
 
-    <!-- Pista para móvil: desaparece al primer toque -->
     <div class="hint" id="hint">Toca la pantalla ✨</div>
+
+    <button class="btn-letter" id="btnLetter" type="button">💌 Ver la carta</button>
   </main>
+
+  <!-- Carta de amor -->
+  <div class="card-layer" id="cardLayer" role="dialog" aria-modal="true" aria-label="Carta de amor">
+    <div class="card-wrap">
+      <div class="card">
+        <div class="card-inner">
+          <h2>Mi amor:</h2>
+          <p>Estas flores amarillas son como tú:<br />brillantes, radiantes y llenas de alegría.</p>
+          <p>Gracias por iluminar cada uno de mis<br />días. Eres simplemente hermosa.</p>
+          <div class="sign">Te Amo Mucho</div>
+          <div class="hearts" aria-hidden="true"><span>♥</span><span>♥</span><span>♥</span></div>
+          <div class="bouquet" aria-hidden="true">🌻</div>
+          <div class="tag">Para Ti</div>
+        </div>
+      </div>
+      <button class="btn-close" id="btnClose" type="button">Cerrar 🌻</button>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
